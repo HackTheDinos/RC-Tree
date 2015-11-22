@@ -5,14 +5,12 @@ TEST_IMG = "images/sample_tree.png"
 
 arr = np.array(Image.open(TEST_IMG).convert('1'))
 
-class TreePixel(object):
-    def __init__(self, x, y, neighbors):
-        self.neighbors = {
-            "up"    : 
-            "left"  :
-            "right" :
-            "down"  :
-        }
+class TreeNode(object):
+    def __init__(self, neighbors, label=None):
+        self.neighbors = neighbors
+        self.label = label
+
+    
 
 already_checked = set()
 
