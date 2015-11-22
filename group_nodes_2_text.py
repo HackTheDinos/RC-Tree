@@ -4,6 +4,15 @@ import matplotlib.pyplot as plt
 from scipy.spatial import distance
 from get_nodes import le_main
 
+try:
+    import Image
+except:
+    from PIL import Image
+
+import pytesseract
+import os.path
+from pytesseract import image_to_string
+
 # %matplotlib inline
 
 def show(img, cvt=cv2.COLOR_GRAY2RGB, do_cvt=True):
@@ -98,15 +107,13 @@ def print_leaf(leaf):
     cv2.circle(tree, nodepos, 4, (255,0,0), 2)
     cv2.circle(tree, labelpos, 4, (255,0,0),2)
     cv2.line(tree, nodepos, labelpos, (0,0,255), 2)
-map(print_leaf, associations)
-show(tree, False)
+# map(print_leaf, associations)
+# show(tree, False)
 
-def labels_for_tree():
-    imfile = "images/tree_image_ref.png"
-    just_tree = cv2.imread(imfile) #use k=9 to get only tips, k=4 gets some of the labels but is not as clean
-    result = label_rectangles(just_tree)    
-    labels = [(pos, "Label " + str(result[1].index(pos)) ) for pos in result[1] ]
-    nodes = le_main(imfile, 1)
+def labels_for_tree(image_path, nodes):
+    just_tree = cv2.imread(image_path) #use k=9 to get only tips, k=4 gets some of the labels but is not as clean
+    result = label_rectangles(just_tree)
+    labels = [(pos, get_label(Image.fromarray(just_tree), pos) ) for pos in result[1] ]
     associations = []
     for label in labels:
         r,lname = label
@@ -120,6 +127,21 @@ def labels_for_tree():
         #get the node that is the minimum distance and name it
         associations.append((min(distances)[1],(x,y),lname))
     tree = result[0].copy()
-    map(print_leaf, associations)
-    show(tree, False)
+    return associations
+    # map(print_leaf, associations)
+    # show(tree, False)
 
+def imgToStr(im):
+    gray_im = cv2.cvtColor(im, cv2.COLOR_BGR2GRAY)
+    gray_image = Image.fromarray(gray_im)
+    str = pytesseract.image_to_string(gray_image, config="--user-words config/user-words.txt --user-patterns config/user-patterns.txt --tessedit_char_whitelist AaBbCcDdEeFfGgHhIiJjKkLlMmNnOoPpQqRrSsTtUuVvWwXxYyZz_0123456789")
+
+    return str
+
+
+
+def get_label(img, pos):
+    x,y,w,h = pos
+    box = (x, y, x + w, y + h)
+    ocr_ready = img.crop(box)
+    return imgToStr(ocr_ready)
