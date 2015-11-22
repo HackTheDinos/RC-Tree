@@ -6,27 +6,30 @@ img = cv2.imread(sys.argv[1])
 gray = cv2.cvtColor(img,cv2.COLOR_BGR2GRAY)
 # filtered = cv2.adaptiveThreshold(gray, 255, cv2.ADAPTIVE_THRESH_MEAN_C, cv2.THRESH_BINARY_INV, 7, 4)
 # filtered = cv2.adaptiveThreshold(gray, 255, cv2.ADAPTIVE_THRESH_MEAN_C, cv2.THRESH_BINARY_INV, 841, 22)
-filtered = cv2.adaptiveThreshold(gray, 255, cv2.ADAPTIVE_THRESH_MEAN_C, cv2.THRESH_BINARY_INV, 15, 19)
-# filtered = cv2.adaptiveThreshold(gray, 255, cv2.ADAPTIVE_THRESH_MEAN_C, cv2.THRESH_BINARY_INV, 45, 1)
-# filtered = cv2.adaptiveThreshold(gray, 255, cv2.ADAPTIVE_THRESH_GAUSSIAN_C, cv2.THRESH_BINARY_INV, 119, 119)
+def get_points(gray):
+    filtered = cv2.adaptiveThreshold(gray, 255, cv2.ADAPTIVE_THRESH_MEAN_C, cv2.THRESH_BINARY_INV, 15, 19)
+    # filtered = cv2.adaptiveThreshold(gray, 255, cv2.ADAPTIVE_THRESH_MEAN_C, cv2.THRESH_BINARY_INV, 45, 1)
+    # filtered = cv2.adaptiveThreshold(gray, 255, cv2.ADAPTIVE_THRESH_GAUSSIAN_C, cv2.THRESH_BINARY_INV, 119, 119)
 
-kernel = cv2.getStructuringElement(cv2.MORPH_CROSS,(2,2))
-dilated = cv2.dilate(filtered,kernel,iterations = 0)
+    kernel = cv2.getStructuringElement(cv2.MORPH_CROSS,(2,2))
+    dilated = cv2.dilate(filtered,kernel,iterations = 0)
 
-im2, contours, hierarchy = cv2.findContours(dilated,cv2.RETR_EXTERNAL,cv2.CHAIN_APPROX_NONE)
+    im2, contours, hierarchy = cv2.findContours(dilated,cv2.RETR_EXTERNAL,cv2.CHAIN_APPROX_NONE)
 
-out = np.zeros(gray.shape, dtype=np.uint8) + 255
+    out = np.zeros(gray.shape, dtype=np.uint8) + 255
 
-for i, contour in enumerate(contours):
-    [x,y,w,h] = cv2.boundingRect(contour)
-    if h < gray.shape[0] * 0.04 or w < gray.shape[1] * 0.04: continue
+    for i, contour in enumerate(contours):
+        [x,y,w,h] = cv2.boundingRect(contour)
+        if h < gray.shape[0] * 0.04 or w < gray.shape[1] * 0.04: continue
 
-    # must be -1
-    cv2.drawContours(out, contours, i, 0, -1)
+        # must be -1
+        cv2.drawContours(out, contours, i, 0, -1)
 
-corners = cv2.goodFeaturesToTrack(out,400,0.25,8, useHarrisDetector=False)
-corners = np.int0(corners)
+    corners = cv2.goodFeaturesToTrack(out,400,0.25,8, useHarrisDetector=False)
+    corners = np.int0(corners)
+    return corners
 
+corners = get_points(gray)
 for i in corners:
     x,y = i.ravel()
     cv2.circle(img,(x,y),3,255,-1)

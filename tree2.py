@@ -48,7 +48,7 @@ def find_tree_contour(gray, iterations=2):
 def nodes_from_corners(image, points, max_dist=16, iterations=1):
     if iterations == 0:
         return points
-    print(iterations)
+    # print(iterations)
     nodes = []
     while len(points):
         point = points[-1]
@@ -62,7 +62,7 @@ def nodes_from_corners(image, points, max_dist=16, iterations=1):
         neighbors = np.array(neighbors)
         point = neighbors[np.random.randint(len(neighbors))]
         point = np.mean(neighbors, axis=0)
-        print(len(points))
+        # print(len(points))
         if iterations == 1:
             #image[point[1], point[0], :] = (255, 0, 0)
             cv2.circle(image, tuple(map(int, point)), 4, (255,0,0), 2)
@@ -103,7 +103,7 @@ def nodes_from_points(image, points, max_dist=16):
                          int(point[1] * ((weight - 1) / weight) + y * (1 / weight)))
                 weight += 1
                 points.pop(i)
-        print(point, len(points))
+        # print(point, len(points))
         cv2.circle(image, point, 5, (0,255,255), -1)
 
 def get_points(img):
@@ -190,10 +190,10 @@ def get_edges(node_neighbors, root=None):
         for edge in edges:
             if root in edge:
                 to_remove.add(edge)
-    print("to_remove", to_remove)
-    print("root",root)
-    print("edges",edges)
-    print("output",edges - to_remove)
+    # print("to_remove", to_remove)
+    # print("root",root)
+    # print("edges",edges)
+    # print("output",edges - to_remove)
     return edges - to_remove
 
 def build_tree(edges, points_with_labels=None, root=None):
@@ -201,9 +201,10 @@ def build_tree(edges, points_with_labels=None, root=None):
     if points_with_labels == None:
         all_points = set([p for e in edges for p in e])
         points_with_labels = {p:None for p in all_points}
-        for leaf in get_leafs(edges, root):
+        # print points_with_labels
+    for leaf in get_leafs(edges, root):
+        if points_with_labels[leaf] is None:
             points_with_labels[leaf] = str(leaf)
-        print points_with_labels
 
     neighbors = construct_graph(edges)
     groups = {}
@@ -228,7 +229,7 @@ def build_tree(edges, points_with_labels=None, root=None):
                 continue
 
             parent = [pt for pt in neighbors[point] if pt not in leafs and pt not in processed]
-            print "parent: {}".format(parent)
+            # print "parent: {}".format(parent)
             assert(len(parent) == 1)
 
             parent = parent[0]
