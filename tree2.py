@@ -127,4 +127,63 @@ def get_labels(points, contours):
     # input: [(11,15), (23,55), (12,55)]
     # {(11,15): None, (23,55): Banana, (12,55): None}
     pass
-    
+
+
+def get_connections(img, points, lines, contours):
+    # return all pairs ((x1,y1), (x2,y2)) where points are connected by an edge
+    pass
+
+def construct_graph(points, edges):
+    point_neighbors = {}
+    for point in points:
+        point_neighbors[point] = set()
+        for edge in edges:
+            if point in edge:
+                point_neighbors[point].update(list(edge))
+        point_neighbors[point].remove(point)
+
+    return point_neighbors
+
+
+def build_tree(points_with_labels, edges):
+    neighbors = construct_graph(points_with_labels.keys(), edges)
+    groups = {}
+
+    to_process = set(points_with_labels.keys())
+    processed = set()
+    leafs = set([p for p, v in points_with_labels.iteritems() if v is not None])
+    groups = {p:v for p, v in points_with_labels.iteritems() if v is not None}
+
+    uh_oh = 0
+    while len(to_process) != len(processed):
+        uh_oh += 1
+        if len(uh_oh) > len(to_process):
+            raise Exception("Something is fucked")
+
+        for p in to_process:
+            new_leafs = set()
+
+            if p in processed:
+                continue
+
+            parent = [pt for pt in neighbors[p] if pt not in leafs and pt not in processed]
+            assert(len(parent) == 1)
+            parent = parent[0]
+
+            group = [pt for edge in edges[parent] for pt in edge if points_with_labels[pt] is not None]
+
+            groups[parent] = tuple([groups.pop(pt) for pt in group])
+
+            processed.update(group)
+            new_leafs.add(parent)
+
+        leafs = new_leafs
+
+    return groups
+        
+
+
+    # get the lines for each labeled point.
+    # get first intersection for that point.
+
+
