@@ -1,3 +1,6 @@
+import tree2
+import ete2
+
 # test
 labels = {
         'a':7, 
@@ -23,5 +26,9 @@ edges = [
         ('h', 'd')
 ]
 
-# output tree should be:
-# ((1,2),(3,4,5),6,7)
+
+tree1 = ete2.Tree("{};".format(((1,2),(3,4,5),6,7)), format=1)
+tree2 = ete2.Tree("{};".format(tree2.build_tree(labels, edges)), format=1)
+
+assert(tree1.robinson_foulds(tree2, unrooted_trees=True)[0] == 0)
+print "tree2.build_tree working"

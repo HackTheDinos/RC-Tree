@@ -144,7 +144,6 @@ def construct_graph(points, edges):
 
     return point_neighbors
 
-
 def build_tree(points_with_labels, edges):
     neighbors = construct_graph(points_with_labels.keys(), edges)
     groups = {}
@@ -155,31 +154,40 @@ def build_tree(points_with_labels, edges):
     groups = {p:v for p, v in points_with_labels.iteritems() if v is not None}
 
     uh_oh = 0
-    while len(to_process) != len(processed):
+    while len(groups) > 1:
         uh_oh += 1
-        if len(uh_oh) > len(to_process):
+        if uh_oh > len(to_process):
+            import pdb;pdb.set_trace()
             raise Exception("Something is fucked")
 
-        for p in to_process:
-            new_leafs = set()
+        next_leafs = set()
+        for point in leafs:
 
-            if p in processed:
+            if point in processed or point not in leafs:
                 continue
 
-            parent = [pt for pt in neighbors[p] if pt not in leafs and pt not in processed]
-            assert(len(parent) == 1)
+            parent = [pt for pt in neighbors[point] if pt not in leafs and pt not in processed]
+            try:
+                assert(len(parent) == 1)
+            except:
+                import pdb; pdb.set_trace()
+
             parent = parent[0]
 
-            group = [pt for edge in edges[parent] for pt in edge if points_with_labels[pt] is not None]
+            if len([pt for pt in neighbors[parent] if pt not in leafs]) > 1:
+                next_leafs.add(point)
+            else:
+                group = [pt for pt in neighbors[parent] if pt in leafs]
+                try:
+                    groups[parent] = tuple([groups.pop(pt) for pt in group])
+                except:
+                    import pdb; pdb.set_trace()
+                processed.update(group)
+                next_leafs.add(parent)
 
-            groups[parent] = tuple([groups.pop(pt) for pt in group])
+        leafs = next_leafs
 
-            processed.update(group)
-            new_leafs.add(parent)
-
-        leafs = new_leafs
-
-    return groups
+    return groups.values()[0]
         
 
 
