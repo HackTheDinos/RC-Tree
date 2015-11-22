@@ -133,19 +133,30 @@ def get_connections(img, points, lines, contours):
     # return all pairs ((x1,y1), (x2,y2)) where points are connected by an edge
     pass
 
-def construct_graph(points, edges):
+def construct_graph(edges):
+    points = set([point for edge in edges for point in edge])
     point_neighbors = {}
     for point in points:
         point_neighbors[point] = set()
         for edge in edges:
             if point in edge:
                 point_neighbors[point].update(list(edge))
-        point_neighbors[point].remove(point)
+        point_neighbors[point].discard(point)
 
     return point_neighbors
 
+def get_leafs(edges, root=None):
+    neighbors = construct_graph(edges)
+    leafs = set(v)
+    for k, v in neighbors:
+        if len(v) == 1:
+            leafs.add(k)
+
+    leafs.discard(root)
+    return leafs
+
 def build_tree(points_with_labels, edges):
-    neighbors = construct_graph(points_with_labels.keys(), edges)
+    neighbors = construct_graph(edges)
     groups = {}
 
     to_process = set(points_with_labels.keys())

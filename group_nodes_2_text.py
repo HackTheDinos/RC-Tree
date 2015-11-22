@@ -100,3 +100,26 @@ def print_leaf(leaf):
     cv2.line(tree, nodepos, labelpos, (0,0,255), 2)
 map(print_leaf, associations)
 show(tree, False)
+
+def labels_for_tree():
+    imfile = "images/tree_image_ref.png"
+    just_tree = cv2.imread(imfile) #use k=9 to get only tips, k=4 gets some of the labels but is not as clean
+    result = label_rectangles(just_tree)    
+    labels = [(pos, "Label " + str(result[1].index(pos)) ) for pos in result[1] ]
+    nodes = le_main(imfile, 1)
+    associations = []
+    for label in labels:
+        r,lname = label
+        x,y,w,h = r
+        # get distances to all nodes
+        distances = set()
+        for node in nodes:
+            x1,y1 = node
+            d = distance.euclidean((x,y),node)
+            distances.add((d,node))
+        #get the node that is the minimum distance and name it
+        associations.append((min(distances)[1],(x,y),lname))
+    tree = result[0].copy()
+    map(print_leaf, associations)
+    show(tree, False)
+
