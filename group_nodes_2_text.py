@@ -13,6 +13,7 @@ def show(img, cvt=cv2.COLOR_GRAY2RGB, do_cvt=True):
     plt.show()
 
 imfile = "images/tree_image_ref.png"
+#imfile = "images/Tree1.png"
 #just_tree = cv2.imread("images/Tree1.png") #use k=12
 #just_tree = cv2.imread("images/Tree2.png") #use k=1
 just_tree = cv2.imread(imfile) #use k=9 to get only tips, k=4 gets some of the labels but is not as clean
@@ -83,16 +84,19 @@ for label in labels:
         d = distance.euclidean((x,y),node)
         distances.add((d,node))
     #get the node that is the minimum distance and name it
-    associations.append((min(distances)[1],lname))
+    associations.append((min(distances)[1],(x,y),lname))
 
 
 
 tree = result[0].copy()
 # print list(associations)[0][0]
 def print_leaf(leaf):
-    pos = tuple(map(int, leaf[0]))
+    nodepos = tuple(map(int, leaf[0]))
+    labelpos = tuple(map(int, leaf[1]))
     font = cv2.FONT_HERSHEY_SIMPLEX
-    cv2.putText(tree, leaf[1], pos, font,0.5, 135)
-    cv2.circle(tree, pos, 4, (255,0,0), 2)
+    #cv2.putText(tree, leaf[2], nodepos, font,0.5, 135)
+    cv2.circle(tree, nodepos, 4, (255,0,0), 2)
+    cv2.circle(tree, labelpos, 4, (255,0,0),2)
+    cv2.line(tree, nodepos, labelpos, (0,0,255), 2)
 map(print_leaf, associations)
 show(tree, False)
