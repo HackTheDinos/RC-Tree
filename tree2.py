@@ -1,6 +1,30 @@
 import cv2
 import numpy as np
 
+def get_points(gray):
+    filtered = cv2.adaptiveThreshold(gray, 255, cv2.ADAPTIVE_THRESH_MEAN_C, cv2.THRESH_BINARY_INV, 15, 19)
+    # filtered = cv2.adaptiveThreshold(gray, 255, cv2.ADAPTIVE_THRESH_MEAN_C, cv2.THRESH_BINARY_INV, 45, 1)
+    # filtered = cv2.adaptiveThreshold(gray, 255, cv2.ADAPTIVE_THRESH_GAUSSIAN_C, cv2.THRESH_BINARY_INV, 119, 119)
+
+    kernel = cv2.getStructuringElement(cv2.MORPH_CROSS,(2,2))
+    dilated = cv2.dilate(filtered,kernel,iterations = 0)
+
+    im2, contours, hierarchy = cv2.findContours(dilated,cv2.RETR_EXTERNAL,cv2.CHAIN_APPROX_NONE)
+
+    out = np.zeros(gray.shape, dtype=np.uint8) + 255
+
+    for i, contour in enumerate(contours):
+        [x,y,w,h] = cv2.boundingRect(contour)
+        if h < gray.shape[0] * 0.04 or w < gray.shape[1] * 0.04: continue
+
+        # must be -1
+        cv2.drawContours(out, contours, i, 0, -1)
+
+    corners = cv2.goodFeaturesToTrack(out,400,0.25,8, useHarrisDetector=False)
+    corners = np.int0(corners)
+    return corners
+
+
 def find_tree_contour(gray, iterations=2):
     _,thresh = cv2.threshold(gray, 200, 255, cv2.THRESH_BINARY_INV) # threshold
     kernel = cv2.getStructuringElement(cv2.MORPH_CROSS,(3,3))
@@ -147,19 +171,43 @@ def construct_graph(edges):
 
 def get_leafs(edges, root=None):
     neighbors = construct_graph(edges)
-    leafs = set(v)
-    for k, v in neighbors:
+    leafs = set()
+    for k, v in neighbors.iteritems():
         if len(v) == 1:
             leafs.add(k)
 
     leafs.discard(root)
     return leafs
 
-def build_tree(points_with_labels, edges):
+def get_edges(node_neighbors, root=None):
+    edges = set()
+    for k, v in node_neighbors.iteritems():
+        for w in v:
+            edges.add(tuple(sorted([k,w])))
+    
+    to_remove = set()
+    if root:
+        for edge in edges:
+            if root in edge:
+                to_remove.add(edge)
+    print("to_remove", to_remove)
+    print("root",root)
+    print("edges",edges)
+    print("output",edges - to_remove)
+    return edges - to_remove
+
+def build_tree(edges, points_with_labels=None, root=None):
+    # print edges
+    if points_with_labels == None:
+        all_points = set([p for e in edges for p in e])
+        points_with_labels = {p:None for p in all_points}
+        for leaf in get_leafs(edges, root):
+            points_with_labels[leaf] = str(leaf)
+        print points_with_labels
+
     neighbors = construct_graph(edges)
     groups = {}
 
-    to_process = set(points_with_labels.keys())
     processed = set()
     leafs = set([p for p, v in points_with_labels.iteritems() if v is not None])
     groups = {p:v for p, v in points_with_labels.iteritems() if v is not None}
@@ -167,20 +215,28 @@ def build_tree(points_with_labels, edges):
     uh_oh = 0
     while len(groups) > 1:
         uh_oh += 1
-        if uh_oh > len(to_process):
+        if uh_oh > len(edges):
             import pdb;pdb.set_trace()
             raise Exception("Something is fucked")
 
         next_leafs = set()
+        # print "groups: {}".format(groups)
+        # print "processed: {}".format(processed)
+        # print "leafs: {}".format(next_leafs)
         for point in leafs:
-
             if point in processed or point not in leafs:
                 continue
 
             parent = [pt for pt in neighbors[point] if pt not in leafs and pt not in processed]
+            print "parent: {}".format(parent)
             assert(len(parent) == 1)
 
             parent = parent[0]
+
+            if len(neighbors[parent]) == 2:
+                if len([pt for pt in neighbors[parent] if pt not in leafs]):
+                    next_leafs.add(point)
+                    continue
 
             if len([pt for pt in neighbors[parent] if pt not in leafs]) > 1:
                 next_leafs.add(point)
@@ -193,10 +249,6 @@ def build_tree(points_with_labels, edges):
         leafs = next_leafs
 
     return groups.values()[0]
-        
-
 
     # get the lines for each labeled point.
     # get first intersection for that point.
-
-
