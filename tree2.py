@@ -167,10 +167,7 @@ def build_tree(points_with_labels, edges):
                 continue
 
             parent = [pt for pt in neighbors[point] if pt not in leafs and pt not in processed]
-            try:
-                assert(len(parent) == 1)
-            except:
-                import pdb; pdb.set_trace()
+            assert(len(parent) == 1)
 
             parent = parent[0]
 
@@ -178,10 +175,7 @@ def build_tree(points_with_labels, edges):
                 next_leafs.add(point)
             else:
                 group = [pt for pt in neighbors[parent] if pt in leafs]
-                try:
-                    groups[parent] = tuple([groups.pop(pt) for pt in group])
-                except:
-                    import pdb; pdb.set_trace()
+                groups[parent] = tuple([groups.pop(pt) for pt in group])
                 processed.update(group)
                 next_leafs.add(parent)
 
