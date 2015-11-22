@@ -126,3 +126,5 @@ def get_labels(points, contours):
     # returns a dict with corresponding labels. e.g.
     # input: [(11,15), (23,55), (12,55)]
     # {(11,15): None, (23,55): Banana, (12,55): None}
+    pass
+    
